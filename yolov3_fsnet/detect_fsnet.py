@@ -140,7 +140,7 @@ def chooselimt_test(pts0, dia, cen): ##replace the 3D sphere with 3D cube
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5l.pt', help='model.pt path(s)')
-    parser.add_argument('--source', type=str, default='/home/wei/Documents/code/data_sets/data_NOCS/testYolo', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=320, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.6, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     print(opt)
 
     cate = 'laptop'
-    fold = '/home/wei/Documents/code/FS_Net/yolov3_fsnet/data/test_scene_1/' ##should be absolute path
+    fold = 'FS_Net/yolov3_fsnet/data/test_scene_1/' ##should be absolute path
 
     classifier_seg3D, classifier_ce, classifier_Rot_green, classifier_Rot_red, model_size, cate_id0 = load_models(
         cate)
