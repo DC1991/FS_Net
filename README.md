@@ -8,7 +8,7 @@ OS: Ubuntu 16.04
 
 GPU: 1080 Ti
 
-Programme language: Python 3.6
+Programme language: Python 3.6, Pytorch.
  
 If you find our [paper](http://arxiv.org/abs/2103.07054) or code is useful, please cite our paper:
 
