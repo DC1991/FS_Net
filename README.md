@@ -36,6 +36,30 @@ Our framework is built on our previous work [G2L-Net](https://github.com/DC1991/
 
 ## Pre requirements
 
+You can find the main requirements in 'requirement.txt'.
+
+### Trained model and sample data
+>>Please download the data.zip [here](https://drive.google.com/file/d/15efs1IIjbRnWIlh-9sXMfbqyL4S08bEG/view?usp=sharing
+>), and the unzip the 'trained_model.zip' under 'yolov3_fsnet/' folder and
+ 'test_scene_1
+.zip' under 'yolov3_fsnet/data/' folder.   
+
+>>The trained model for YOLOv3 will be downloaded automatically. We use the 'yolov5l.pt' provided by this [git](https
+>://github.com/ultralytics/yolov3). According to our test, this trained model works well for category 'laptop', you
+> may need to re-train the 2D detect model for other categories.
+
 ## Demo
 
+python yolov3_fsnet/detect_fsnet.py  
+please note: The code is created and debugged in Pycharm, therefore you may need to change the import head in other
+ python IDE. 
 ## Training
+### Generate training point clouds
+To generate your own dataset, first use the data preprocess code provided in this [git](https://github.com/mentian/object-deformnet/blob/master/preprocess/pose_data.py), and then use the code
+ provided in 'gen_pts.py'.
+
+### Training FS_Net
+#### YOLOv3 Training
+For 2D detection training part, please refer to this [git](https://github.com/ultralytics/yolov3)
+#### FS_Net Training
+The sample training data and training code will be uploaded soon.
