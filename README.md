@@ -8,7 +8,7 @@ OS: Ubuntu 16.04
 
 GPU: 1080 Ti
 
-Programme language: Python 3.6
+Programme language: Python 3.6, Pytorch.
  
 If you find our [paper](http://arxiv.org/abs/2103.07054) or code is useful, please cite our paper:
 
@@ -44,8 +44,7 @@ You can find the main requirements in 'requirement.txt'.
  'test_scene_1
 .zip' under 'yolov3_fsnet/data/' folder.   
 
->>The trained model for YOLOv3 will be downloaded automatically. We use the 'yolov5l.pt' provided by this [git](https
->://github.com/ultralytics/yolov3). According to our test, this trained model works well for category 'laptop', you
+>>The trained model for YOLOv3 will be downloaded automatically. We use the 'yolov5l.pt' provided by this [git](https://github.com/ultralytics/yolov3). According to our test, this trained model works well for category 'laptop', you
 > may need to re-train the 2D detect model for other categories.
 
 ## Demo
