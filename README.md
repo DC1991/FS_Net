@@ -63,3 +63,7 @@ To generate your own dataset, first use the data preprocess code provided in thi
 For 2D detection training part, please refer to this [git](https://github.com/ultralytics/yolov3)
 #### FS_Net Training
 The sample training data and training code will be uploaded soon.
+
+
+## Acknowledgment
+We borrow some off-the-shelf codes from [3dgcn](https://github.com/j1a0m0e4sNTU/3dgcn) and [YOLOv3](https://github.com/ultralytics/yolov3). Thanks for the authors' work.
