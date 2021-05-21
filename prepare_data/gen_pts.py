@@ -7,6 +7,27 @@ import numpy as np
 import os
 import _pickle as pickle
 from uti_tool import getFiles_cate, depth_2_mesh_all, depth_2_mesh_bbx
+from prepare_data.renderer import create_renderer
+
+def render_pre(model_path):
+    renderer = create_renderer(640, 480, renderer_type='python')
+    models = getFiles_ab_cate(model_path, '.ply') #model name example: laptop_air_1_norm.ply please adjust the
+    # corresponding functions according to the model name.
+    objs=[]
+    for model in models:
+        obj = model.split('.')[1]
+        objs.append(obj)
+        renderer.add_object(obj, model)
+    return renderer
+
+def getFiles_ab_cate(file_dir,suf):
+    L=[]
+    for root, dirs, files in os.walk(file_dir):
+        for file in files:
+            if file.split('.')[1] == suf:
+                L.append(os.path.join(root, file))
+    return L
+
 def get_dis_all(pc,dep,dd=15):
 
     N=pc.shape[0]
@@ -139,7 +160,9 @@ def get_point_wise_lab(basepath, fold, renderer, sp):
 
 
 
-
+if __name__ == '__main__':
+    path = '/home/wei/Documents/code/data_sets/data_NOCS/obj_models/real_train/plys/'
+    render_pre(path)
 
 
 
