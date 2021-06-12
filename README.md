@@ -1,7 +1,6 @@
 # Category-Level 6D Pose Estimation
 
-This code is for our CVPR2021 oral paper: FS-Net: Fast Shape-based Network for Category-Level 6D Object Pose Estimation with Decoupled Rotation Mechanism. (I will upload the code in next few weeks, thanks for you patience.)
-
+This code is for our CVPR2021 oral paper: FS-Net: Fast Shape-based Network for Category-Level 6D Object Pose Estimation with Decoupled Rotation Mechanism. If you have any questions, please leave your comments or email me.
 ## Experiment setup
 
 OS: Ubuntu 16.04
@@ -63,7 +62,7 @@ To generate your own dataset, first use the data preprocess code provided in thi
 #### YOLOv3 Training
 For 2D detection training part, please refer to this [git](https://github.com/ultralytics/yolov3)
 #### FS_Net Training
-The sample training data and training code will be uploaded soon.
+After the data prepare, run the Train.py to train your own model.
 
 
 ## Acknowledgment
