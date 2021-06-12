@@ -153,15 +153,8 @@ def get_point_wise_lab(basepath, fold, renderer, sp):
 
 
 
-
-
-
-
-
-
-
 if __name__ == '__main__':
-    path = '/home/wei/Documents/code/data_sets/data_NOCS/obj_models/real_train/plys/'
+    path = 'your own object model path '
     render_pre(path)
 
 

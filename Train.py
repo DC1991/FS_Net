@@ -35,7 +35,7 @@ opt = parser.parse_args()
 kc = opt.outclass
 num_cor = 3
 num_vec = 8
-
+nw=0 # number of cpu
 localtime = (time.localtime(time.time()))
 year = localtime.tm_year
 month = localtime.tm_mon
@@ -89,9 +89,6 @@ for cat in ['laptop']:
     classifier_Rot_green.cuda()
 
 
-    # classifier_box_vec.cuda()
-    # classifier_box_vec = classifier_box_vec.train()
-
     opt.outf = 'models/FS_Net_%s'%(cat)
     try:
         os.makedirs(opt.outf)
@@ -104,26 +101,15 @@ for cat in ['laptop']:
 
     lr = 0.001
 
-    loss_save = opt.outf
-    fl = open(loss_save + "/loss_{0}_{1}_{2}_{3}.txt".format(year, month, day, hour), 'w+')
-    # fl = open(loss_save + "/train_vec3e20_loss.txt", 'w+')
     epochs = opt.nepoch
-    scale = 1.0
-
-
-    C = 0
-    # Rs, Ts = read_RT_cub04(obj)
 
     optimizer = optim.Adam([{'params': classifier_seg3D.parameters()},{'params': classifier_ce.parameters()},{'params': classifier_Rot_red.parameters()},{'params': classifier_Rot_green.parameters()}], lr=lr, betas=(0.9, 0.99))
-
-    #dataloader = load_pts_train_all(train_list, train_lab, batch_size, lim=1, train=1, ratio=1,shuf=True, drop=True)
-
 
     bbxs = 0
     K = np.array([[591.0125, 0, 322.525], [0, 590.16775, 244.11084], [0, 0, 1]])
 
-    data_path = '/home/wei/Documents/code/data_sets/data_NOCS/Real/train/pts/'
-    dataloader = load_pts_train_cate(data_path, batch_size, K,cat, lim=1, rad=300, shuf=True, drop=True, corners=0,nw=6)
+    data_path = 'your data path'
+    dataloader = load_pts_train_cate(data_path, batch_size, K,cat, lim=1, rad=300, shuf=True, drop=True, corners=0,nw=nw)
 
     for epoch in range(sepoch,epochs):
 
@@ -141,37 +127,23 @@ for cat in ['laptop']:
             points, target_, Rs, Ts, obj_id,S, imgp= data['points'], data['label'], data['R'], data['T'], data['cate_id'], data['scale'], data['dep']
             ptsori = points.clone()
 
-            pts0 = points.numpy().copy()
-
-            point_ori = points.numpy()[:, :, 0:3]
-
             target_seg = target_[:, :, 0]  ###seg_target
 
             points_ = points.numpy().copy()
 
-
             points, corners, centers, pts_recon = data_augment(points_[:, :, 0:3], Rs, Ts,num_cor, target_seg,a=15.0)
-
 
             points, target_seg, pts_recon = Variable(torch.Tensor(points)), Variable(target_seg), Variable(pts_recon)
 
-
-
-
             points, target_seg,pts_recon = points.cuda(), target_seg.cuda(), pts_recon.cuda()
-
-
 
             pointsf = points[:, :, 0:3].unsqueeze(2)
 
             optimizer.zero_grad()
-
             points = pointsf.transpose(3, 1)
             points_n = pointsf.squeeze(2)
 
             obj_idh = torch.zeros((1,1))
-
-
 
             if obj_idh.shape[0] == 1:
                 obj_idh = obj_idh.view(-1, 1).repeat(points.shape[0], 1)
@@ -179,7 +151,7 @@ for cat in ['laptop']:
                 obj_idh = obj_idh.view(-1, 1)
 
             one_hot = torch.zeros(points.shape[0], 16).scatter_(1, obj_idh.cpu().long(), 1)
-            one_hot = one_hot.cuda()
+            one_hot = one_hot.cuda() ## the pre-defined category ID
 
 
 
@@ -306,10 +278,6 @@ for cat in ['laptop']:
             loss_rot_r.item()))
 
 
-            fl.write('%f ' % (loss_seg.item()))
-            fl.write('%f ' % (loss_res.item()))
-            fl.write('\n')
-
             print()
 
             torch.save(classifier_seg3D.state_dict(), '%s/Seg3D_last_obj%s.pth' % (opt.outf,
@@ -319,7 +287,7 @@ for cat in ['laptop']:
                        '%s/Rot_g_last_obj%s.pth' % (opt.outf, cat))
             torch.save(classifier_Rot_red.state_dict(),
                        '%s/Rot_r_last_obj%s.pth' % (opt.outf, cat))
-            if epoch>0 and epoch %(epochs//5)== 0:
+            if epoch>0 and epoch %(epochs//5)== 0: ##save mid checkpoints
 
                 torch.save(classifier_seg3D.state_dict(), '%s/Seg3D_epoch%d_obj%s.pth' % (opt.outf,
                                                                                           epoch, cat))
@@ -328,7 +296,6 @@ for cat in ['laptop']:
                            '%s/Rot_g_epoch%d_obj%s.pth' % (opt.outf, epoch, cat))
                 torch.save(classifier_Rot_red.state_dict(),
                            '%s/Rot_r_epoch%d_obj%s.pth' % (opt.outf, epoch, cat))
-    fl.close()
 
 
 

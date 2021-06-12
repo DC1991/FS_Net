@@ -53,6 +53,7 @@ python yolov3_fsnet/detect_fsnet.py
 please note: The code is created and debugged in Pycharm, therefore you may need to change the import head in other
  python IDE. 
 ## Training
+Please note, some details are changed from the original paper for more efficient training. 
 ### Generate training point clouds
 To generate your own dataset, first use the data preprocess code provided in this [git](https://github.com/mentian/object-deformnet/blob/master/preprocess/pose_data.py), and then use the code
  provided in 'gen_pts.py'. The render function is borrowed for [BOP](https://github.com/thodan/bop_toolkit), please

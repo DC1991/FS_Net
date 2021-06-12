@@ -7,6 +7,10 @@ import cv2
 import math
 import struct
 import os
+import random
+
+
+
 def get_rotation(x_,y_,z_):
 
     # print(math.cos(math.pi/2))
@@ -77,9 +81,7 @@ def data_augment(points, Rs, Ts, num_c, target_seg,ax=5, ay=5, az=25, a=15):
 
 
         Rm = get_rotation(np.random.uniform(-a, a), np.random.uniform(-a, a), np.random.uniform(-a, a))
-        # print(points[ii, :, 0:3].shape)
         points[ii, :, 0:3] = np.dot(Rm, points[ii, :, 0:3].T).T
-        # pts_seg = pts0[ii, np.where(target_seg.numpy()[ii, :] == 1), 0:3]
 
         if target_seg[0].sum().item()<1:
             print('target_seg.numpy()[ii, :] == 1)[0].sum()',(target_seg.numpy()[ii, :] ==1)[0].sum())
@@ -88,12 +90,6 @@ def data_augment(points, Rs, Ts, num_c, target_seg,ax=5, ay=5, az=25, a=15):
         centers[ii,:]=Tt-np.mean(pts_seg,0)
 
         Tt_c = np.array([0, 0, 0]).T
-
-        # y_axis = np.dot(Rt,np.array([0,1,0]).reshape(3))
-        #
-        # xz_axis = np.dot(Rt,np.array([0,0,0]).reshape(3))
-        # corners[ii, 0:3] = y_axis
-        # corners[ii, 3:6] = xz_axis
 
 
         corners_ = np.array([[0,0,0],[0,200, 0],[200, 0, 0]])
@@ -832,3 +828,276 @@ def depth_2_mesh_all(depth,K):
     mesh=depth_2_mesh_bbx(depth, [r1,r2,c1,c2], K, step=1, enl=0)
 
     return mesh
+
+def getFiles_ab(file_dir,suf,a,b):
+    L=[]
+    for root, dirs, files in os.walk(file_dir):
+        #print('root: ',dirs)
+        for file in files:
+            if os.path.splitext(file)[1] == suf:
+                #print(os.path.join(root, file))
+                #sdf
+                L.append(os.path.join(root, file))
+        # L.sort(key=lambda x:int(x[-9:-4])) # 0000
+        L.sort(key=lambda x: int(x[a:b]))#0000.png
+    return L
+
+def shake_bbx(bbx, degrees=(0, 0), translate=(0.1, 0.1), scale=(0.9, 1.2), shear=(0, 0),W=640,H=480):
+
+    #### bbx: x1,x2,y1,y2
+    # random.seed(1092)
+    # print(random.random())
+    bw = bbx[1]-bbx[0]
+    cx = bbx[0]+bw//2
+    bh = bbx[3]-bbx[2]
+    cy = bbx[2]+bh//2
+    targets = np.array([bbx[0], bbx[2], bbx[1], bbx[3]])
+    a = random.random() * (degrees[1] - degrees[0]) + degrees[0]
+    s = random.random() * (scale[1] - scale[0]) + scale[0]
+    R = np.eye(3)
+
+    # R[:2] = cv2.getRotationMatrix2D(angle=a, center=(W / 2, H / 2), scale=s)
+    R[:2] = cv2.getRotationMatrix2D(angle=a, center=(int(cx), int(cy)), scale=s)
+    # Translation
+    T = np.eye(3)
+    T[0, 2] = (random.random() * 2 - 1) * translate[0] * bw  # x translation (pixels)
+    T[1, 2] = (random.random() * 2 - 1) * translate[1] * bh   # y translation (pixels)
+    # T[0, 2] = translate[0] * bw  # x translation (pixels)
+    # T[1, 2] = translate[1] * bh  # y translation (pixels)
+
+    # Shear
+    S = np.eye(3)
+    S[0, 1] = math.tan((random.random() * (shear[1] - shear[0]) + shear[0]) * math.pi / 180)  # x shear (deg)
+    S[1, 0] = math.tan((random.random() * (shear[1] - shear[0]) + shear[0]) * math.pi / 180)  # y shear (deg)
+
+    M = S @ T @ R  # Combined rotation matrix. ORDER IS IMPORTANT HERE!!
+    # M = np.eye(3)
+    # if len(targets) > 0:
+    n = 1
+    points = targets.copy().reshape(1,4)
+    # print(random.random())
+
+
+    # warp points
+    xy = np.ones((n * 4, 3))
+    xy[:, :2] = points[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(n * 4, 2)  # x1y1, x2y2, x1y2, x2y1
+    xy = (xy @ M.T)[:, :2].reshape(n, 8)
+
+    # create new boxes
+    x = xy[:, [0, 2, 4, 6]]
+    y = xy[:, [1, 3, 5, 7]]
+    xy = np.concatenate((x.min(1), y.min(1), x.max(1), y.max(1))).reshape(4, n).T
+
+    # apply angle-based reduction of bounding boxes
+    radians = a * math.pi / 180
+    reduction = max(abs(math.sin(radians)), abs(math.cos(radians))) ** 0.5
+    x = (xy[:, 2] + xy[:, 0]) / 2
+    y = (xy[:, 3] + xy[:, 1]) / 2
+    w = (xy[:, 2] - xy[:, 0]) * reduction
+    h = (xy[:, 3] - xy[:, 1]) * reduction
+    xy = np.concatenate((x - w / 2, y - h / 2, x + w / 2, y + h / 2)).reshape(4, n).T
+
+    # reject warped points outside of image
+    x1 = int(np.clip(xy[0][0], 0, W))
+    x2 = int(np.clip(xy[0][2], 0, W))
+    y1 = int(np.clip(xy[0][1], 0, H))
+    y2 = int(np.clip(xy[0][3], 0, H))
+
+    return np.array([x1, x2,y1, y2])
+
+
+def depth_out_iou(depth, box1_yolo, box2_gt, z=0):
+    ioubb = get_bbxs_iou(box1_yolo, box2_gt)
+
+    if z == 0:
+        depth[ioubb[2]:ioubb[3], ioubb[0]:ioubb[1]] = 0
+
+    return depth, ioubb
+
+def get_bbxs_iou(box1, box2):
+    '''
+
+    :param box1: x1,x2, y1 , y2
+    :param box2: x1 x2 y1 y2
+    :return:
+    '''
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[2], box1[1], box1[3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[2], box2[1], box2[3]
+
+    x2 = min(b1_x2, b2_x2)
+    x1 = max(b1_x1, b2_x1)
+    y1 = max(b1_y1, b2_y1)
+    y2 = min(b1_y2, b2_y2)
+
+    return int(x1),int(x2),int(y1),int(y2)
+
+def defor_3D(pts,lab, R,T,pc ,scalex=(1,1),scalez=(1,1),scaley=(1,1),scale=(1,1), cate='',OR=None,bm=0.5):
+
+    ## follow by xyz order
+    # x_nr = x_r + x_r*np.random.uniform(scalex[0], scalex[1])
+    # y_nr = y_r + y_r*np.random.uniform(scaley[0], scaley[1])
+    # z_nr = z_r + z_r*np.random.uniform(scalez[0], scalez[1])
+    ptsn = pts.copy()
+    ptsn =np.dot(R.T ,(ptsn-T).T).T # Nx3
+    # ptsn = np.dot(R.T, ptsn.T).T  # Nx3
+    # show_mulit_mesh([ptsn, pts-T])
+    ex = random.uniform(scalex[0], scalex[1])
+    ez = random.uniform(scalez[0], scalez[1])
+    ey = random.uniform(scaley[0], scaley[1])
+    OR,lx,ly,lz ,miny,maxy= get_3D_corner_def(pc)
+    # show_mulit_mesh([pc])
+
+    ptsn[:, 0] = ptsn[:, 0] * ex
+    ptsn[:, 1] = ptsn[:, 1] * ey
+    ptsn[:, 2] = ptsn[:, 2] * ez
+
+    s=0
+    if cate =='mug' or cate=='bowl':
+        s = random.uniform(-(1 - scale[0]), -(1 - scale[1]))
+        mb = bm
+        # print(mb, s)
+        #
+        if mb>0.5:
+            s = s * ((maxy-ptsn[np.where(lab == 1)[0], 1]) / ly) ## bottle change (screen down)
+        else:
+            s = s * ((ptsn[np.where(lab == 1)[0], 1] - miny) / ly) ## mouth change (screen up)
+        ptsn[np.where(lab==1)[0], 0] = ptsn[np.where(lab==1)[0], 0]*(1+s)
+
+        ptsn[np.where(lab==1)[0], 2] = ptsn[np.where(lab==1)[0], 2]*(1+s)
+
+
+
+
+    ptsn = np.dot(R, ptsn.T).T+T
+
+    # print('inside func')
+    # show_mulit_mesh([ptsn])
+
+
+
+
+
+    return ptsn, ex,ey, ez,s
+
+def pts_iou(pts,label, K, seg):
+    '''
+
+    :param pts: N,3
+    label: N,1
+    :param K: 3,3
+    :param seg: x1, x2, y1 y2
+    :return:
+    '''
+    fx = K[0,0]
+    ux = K[0,2]
+    fy = K[1,1]
+    uy = K[1,2]
+    # dep3d = dep3d[np.where(dep3d[:, 0] != 0.0)]
+    # dep3d = dep3d[np.where(dep3d[:, 1] != 0.0)]
+    # dep3d = dep3d[np.where(dep3d[:, 2] != 0.0)]
+    x1 = seg[0]
+    x2 = seg[1]
+    y1 = seg[2]
+    y2 = seg[3]
+
+    pts1 = pts[np.where(((pts[:,0]*fx+ux*pts[:,2])/pts[:,2])>x1)]
+    label1 = label[np.where(((pts[:,0]*fx+ux*pts[:,2])/pts[:,2])>x1)]
+
+    pts2 = pts1[np.where(((pts1[:, 0] * fx + ux * pts1[:, 2]) / pts1[:, 2]) < x2)]
+    label2 = label1[np.where(((pts1[:, 0] * fx + ux * pts1[:, 2]) / pts1[:, 2]) < x2)]
+
+    pts3 = pts2[np.where(((pts2[:, 1] * fy + uy * pts2[:, 2]) / pts2[:, 2]) > y1)]
+    label3 = label2[np.where(((pts2[:, 1] * fy + uy * pts2[:, 2]) / pts2[:, 2]) > y1)]
+
+
+    pts4 = pts3[np.where(((pts3[:, 1] * fy + uy * pts3[:, 2]) / pts3[:, 2]) < y2)]
+    label4 = label3[np.where(((pts3[:, 1] * fy + uy * pts3[:, 2]) / pts3[:, 2]) < y2)]
+
+    return pts4, label4
+
+def get_3D_corner_def(pc):
+    pc=move_2_C(pc)
+    x_r=max(pc[:,0])-min(pc[:,0])
+    y_r=max(pc[:,1])-min(pc[:,1])
+    z_r=max(pc[:,2])-min(pc[:,2])
+
+    ext1=np.array([0,x_r,y_r,z_r])
+    or1=np.array([ext1[1]/2,-ext1[2]/2,-ext1[3]/2])
+    or2=np.array([ext1[1]/2,ext1[2]/2,-ext1[3]/2])
+    or3=np.array([ext1[1]/2,ext1[2]/2,ext1[3]/2])
+    or4=np.array([ext1[1]/2,-ext1[2]/2,ext1[3]/2])
+
+    or5=np.array([-ext1[1]/2,-ext1[2]/2,-ext1[3]/2])
+    or6=np.array([-ext1[1]/2,ext1[2]/2,-ext1[3]/2])
+    or7=np.array([-ext1[1]/2,ext1[2]/2,ext1[3]/2])
+    or8=np.array([-ext1[1]/2,-ext1[2]/2,ext1[3]/2])
+
+    OR=np.array([or1,or2,or3,or4,or5,or6,or7,or8])
+
+    return OR, x_r,y_r,z_r,min(pc[:,1]),max(pc[:,1])
+
+def var_2_norm(pc,ex,ey, ez,c=''):
+    ## cats = ['bottle','bowl','camera','can','laptop','mug']
+    # cats = ['02876657', '02880940', '02942699', '02946921', '03642806', '03797390']
+    if c=='bottle':
+        unitx = 87
+        unity = 220
+        unitz = 89
+    elif c=='bowl':
+        unitx = 165
+        unity = 80
+        unitz = 165
+    elif c == 'camera':
+        unitx = 88
+        unity = 128
+        unitz = 156
+    elif c=='can':
+        unitx = 68
+        unity = 146
+        unitz = 72
+    elif c=='laptop':
+        unitx = 346
+        unity = 200
+        unitz = 335
+    elif c=='mug':
+        unitx = 146
+        unity = 83
+        unitz = 114
+    elif c=='02876657':
+        unitx = 324/4
+        unity = 874/4
+        unitz = 321/4
+    elif c == '02880940':
+        unitx = 675/4
+        unity = 271/4
+        unitz = 675/4
+    elif c=='02942699':
+        unitx = 464/4
+        unity = 487/4
+        unitz = 702/4
+    elif c=='02946921':
+        unitx = 450/4
+        unity = 753/4
+        unitz = 460/4
+    elif c=='03642806':
+        unitx = 581/4
+        unity = 445/4
+        unitz = 672/4
+    elif c=='03797390':
+        unitx = 670/4
+        unity = 540/4
+        unitz = 497/4
+    else:
+        print('This category is not recorded in my little brain.')
+
+
+
+    OR, lx, ly, lz, miny, maxy = get_3D_corner_def(pc)
+
+    lx = lx * ex
+    ly = ly * ey
+    lz = lz * ez
+
+
+
+    return lx-unitx,ly-unity, lz-unitz
