@@ -53,16 +53,16 @@ please note: The code is created and debugged in Pycharm, therefore you may need
  python IDE. 
 ## Training
 Please note, some details are changed from the original paper for more efficient training. 
-### Generate training point clouds
+### Data Preparation
 To generate your own dataset, first use the data preprocess code provided in this [git](https://github.com/mentian/object-deformnet/blob/master/preprocess/pose_data.py), and then use the code
- provided in 'gen_pts.py'. The render function is borrowed for [BOP](https://github.com/thodan/bop_toolkit), please
+ provided in 'gen_pts.py'. The render function is borrowed from [BOP](https://github.com/thodan/bop_toolkit), please
   refer to that git if you have problems with rendering.
 
 ### Training FS_Net
 #### YOLOv3 Training
 For 2D detection training part, please refer to this [git](https://github.com/ultralytics/yolov3)
 #### FS_Net Training
-After the data prepare, run the Train.py to train your own model.
+After the data preparation, run the Train.py to train your own model.
 
 
 ## Acknowledgment
