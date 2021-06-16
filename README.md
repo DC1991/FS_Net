@@ -9,16 +9,16 @@ GPU: 1080 Ti
 
 Programme language: Python 3.6, Pytorch.
  
-If you find our [paper](http://arxiv.org/abs/2103.07054) or code is useful, please cite our paper:
+If you find our paper [link1(arXiv)](http://arxiv.org/abs/2103.07054) [link2(CVF)](https://openaccess.thecvf.com/content/CVPR2021/papers/Chen_FS-Net_Fast_Shape-Based_Network_for_Category-Level_6D_Object_Pose_Estimation_CVPR_2021_paper.pdf) or code is useful, please cite our paper:
 
 @InProceedings{Chen_2021_CVPR,  
 author = {Chen, Wei and Jia, Xi and Chang, Hyung Jin and Duan, Jinming and Linlin, Shen and Leonardis, Ales},  
 title = {FS-Net: Fast Shape-based Network for Category-Level 6D Object Pose Estimation with Decoupled Rotation Mechanism},  
-booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},  
+booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},  
 month = {June},  
-year = {2021}  
+year = {2021},  
+pages     = {1581-1590}  
 }  
-
 
 ## Contributions
 Our framework is built on our previous work [G2L-Net](https://github.com/DC1991/G2L_Net), with the following Contributions:
