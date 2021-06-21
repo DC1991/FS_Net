@@ -1,3 +1,5 @@
+# CVPR Virtual Meeting
+My schedule is "Paper Session 2;  Monday, June 21, 2021 10:00 PM – 12:30 AM (Eastern Standard Time)." I am now in China, for Beijing Time, my schedule is "Tuesday, June 22, 2021 10:00 AM - 12:30 PM". Welcome to my LIVE VIDEO CHAT channel.
 # Category-Level 6D Pose Estimation
 
 This code is for our CVPR2021 oral paper: FS-Net: Fast Shape-based Network for Category-Level 6D Object Pose Estimation with Decoupled Rotation Mechanism. If you have any questions, please leave your comments or email me.
