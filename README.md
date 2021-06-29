@@ -24,8 +24,8 @@ pages     = {1581-1590}
 Our framework is built on our previous work [G2L-Net](https://github.com/DC1991/G2L_Net), with the following Contributions:
 <img src = 'https://github.com/DC1991/FS_Net/blob/main/prepare_data/imgs/arch.png' width=600>
  1. New latent feature learning  
-        >>> [3D graph convolution](https://github.com/j1a0m0e4sNTU/3dgcn/issues) based observed points reconstruction
-
+        >>> [3D graph convolution](https://github.com/j1a0m0e4sNTU/3dgcn/issues) based observed points reconstruction(orientation preserved; green are reconstructed, yellow are observed)  
+        <img src = 'https://github.com/DC1991/FS_Net/blob/main/prepare_data/imgs/3DGC.png' width=600>
  2. New rotation representation  
         >>> Decomposable vector-based rotation representation  
         <img src = 'https://github.com/DC1991/FS_Net/blob/main/prepare_data/imgs/lap_green.gif' width=300>
